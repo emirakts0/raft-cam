@@ -13,7 +13,7 @@
 
 ## Overview
 
-> Each node is a separate OS process running real Raft consensus with a key-value FSM and BoltDB-backed storage. Adding or removing a node is not a canvas trick — a new process actually starts and joins the cluster through real membership changes, and a removed node is deregistered and shut down. A transport-level wrapper instruments every RPC — heartbeats, votes, append entries, snapshots, leadership transfers — and streams them to the browser over SSE.
+> Each node is a separate OS process running real Raft consensus with a key-value FSM backed by BoltDB. Nodes join and leave the cluster through real membership changes, and a transport-level wrapper captures RPCs — heartbeats, votes, snapshots, leadership transfers — streaming them to the browser over SSE.
 
 ## Features
 
@@ -107,7 +107,7 @@ flowchart TB
     style F3 fill:#69D2E7,stroke:#111,stroke-width:2px
 ```
 
-One binary, one flag set per node: `-node-id`, `-raft-addr`, `-http-addr`, `-bootstrap` / `-join-addr`. The bootstrap node starts solo; everyone else joins through its HTTP API.
+Every node runs the same binary. The first one bootstraps the cluster; the rest simply join it. From there, the cluster can grow as large as you like — straight from the UI.
 
 ---
 
