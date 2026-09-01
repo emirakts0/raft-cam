@@ -1,7 +1,7 @@
 <h1 align="center">RaftCam</h1>
 
 <p align="center">
-  A real multi-node Raft cluster you can watch think — and mess with. Built on <a href="https://github.com/hashicorp/raft">hashicorp/raft</a>: nodes are real OS processes you can spawn, remove and kill live from the UI, with every Raft RPC visualized in real time through a Neobrutalism canvas UI.
+  Watch Raft consensus think. A real Raft cluster — spawn, kill and elect nodes live, visualized on a Neobrutalism canvas.
 </p>
 
 <div align="center">
@@ -70,24 +70,44 @@ make clean   # stop + remove bin/ data/ logs/
 
 ## Architecture
 
-```
-                 Browser (Canvas UI :8001)
-                    | HTTP          ^ SSE
-                    v               |
-   ┌─────────────────────────────────────────────┐
-   │              NODE 1 (LEADER)                │
-   │  Raft TCP :7001  |  HTTP :8001              │
-   │  ├─ Raft Engine + Transport Observer        │
-   │  ├─ KV FSM + BoltDB + Snapshots             │
-   │  ├─ Lazy Event Hub (SSE fan-out)            │
-   │  └─ Process Manager (node spawner)          │
-   └──────────────┬───────────────┬──────────────┘
-        AppendEntries        Heartbeats
-                  v               v
-   ┌────────────────────┐  ┌────────────────────┐
-   │  NODE 2 (FOLLOWER) │  │  NODE 3 (FOLLOWER) │
-   │  :7002  |  :8002   │  │  :7003  |  :8003   │
-   └────────────────────┘  └────────────────────┘
+```mermaid
+flowchart TB
+    B["Browser<br/>Canvas UI :8001"]
+
+    subgraph L["NODE 1 · LEADER"]
+        direction TB
+        ENG["Raft Engine +<br/>Transport Observer"]
+        FSM["KV FSM<br/>BoltDB + Snapshots"]
+        HUB["Lazy Event Hub<br/>SSE fan-out"]
+        PM["Process Manager<br/>node spawner"]
+        ENG --- FSM
+        ENG --- HUB
+    end
+
+    subgraph F2["NODE 2 · FOLLOWER"]
+        E2["Raft Engine + KV FSM<br/>Raft :7002 · HTTP :8002"]
+    end
+
+    subgraph F3["NODE 3 · FOLLOWER"]
+        E3["Raft Engine + KV FSM<br/>Raft :7003 · HTTP :8003"]
+    end
+
+    B -- "HTTP (fsm, nodes, join)" --> HUB
+    HUB -- "SSE /events" --> B
+    PM -. "spawn child process" .-> F2
+    PM -. "spawn child process" .-> F3
+    ENG -- "AppendEntries + Heartbeats" --> E2
+    ENG -- "AppendEntries + Heartbeats" --> E3
+
+    classDef browser fill:#FFDE17,stroke:#111,stroke-width:2px,color:#111
+    classDef comp fill:#ffffff,stroke:#111,stroke-width:1px,color:#111
+
+    class B browser
+    class ENG,FSM,HUB,PM,E2,E3 comp
+
+    style L fill:#FF6B6B,stroke:#111,stroke-width:2px
+    style F2 fill:#69D2E7,stroke:#111,stroke-width:2px
+    style F3 fill:#69D2E7,stroke:#111,stroke-width:2px
 ```
 
 One binary, one flag set per node: `-node-id`, `-raft-addr`, `-http-addr`, `-bootstrap` / `-join-addr`. The bootstrap node starts solo; everyone else joins through its HTTP API.
