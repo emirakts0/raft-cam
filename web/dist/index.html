@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hayal-i Raft</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&family=Plus+Jakarta+Sans:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=neobrutalism_v5">
+</head>
+<body>
+
+  <!-- Top Header -->
+  <header class="top-header">
+    <div class="brand-section">
+      <h1 class="app-title">Hayal-i Raft</h1>
+    </div>
+
+    <!-- Active Observed Node Selector (Target Stream) -->
+    <div class="header-vantage-section" id="header-vantage-single">
+      <div class="neo-dropdown" id="dropdown-target-node" style="min-width: 170px;">
+        <button type="button" class="neo-dropdown-trigger header-target-trigger" id="dropdown-target-trigger">
+          <span class="status-dot" id="target-sse-dot"></span>
+          <span class="dropdown-selected-text" id="target-node-text">Connecting...</span>
+          <span class="dropdown-arrow">▼</span>
+        </button>
+        <div class="neo-dropdown-menu" id="dropdown-target-menu">
+          <!-- Dynamically filled with cluster nodes -->
+        </div>
+      </div>
+    </div>
+
+    <div class="header-stats">
+      <div class="stat-chip" title="Total Nodes Count">
+        <span>Nodes:</span>
+        <strong id="stat-nodes-count">0</strong>
+      </div>
+      <div class="stat-chip conn">
+        <span class="status-dot" id="sse-status-dot"></span>
+        <span id="sse-status-text">SSE</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Multi-Column Dashboard -->
+  <main class="main-container" id="view-single-container">
+
+    <!-- Left Column: Node Inspector (Top) & KV Replication (Bottom) -->
+    <aside class="side-column side-column-left">
+      
+      <!-- Node Inspector Card (Top Left) -->
+      <section class="neo-card" id="inspector-card">
+        <div class="card-header cyan">
+          <span>Node Details</span>
+          <!-- Add Nodes Floating Trigger & Popover -->
+          <div class="add-nodes-section">
+            <button id="btn-toggle-add-nodes" type="button" class="neo-btn tone-1" style="padding: 3px 8px; font-size: 10.5px;">
+              <span>+ Add Nodes</span>
+              <span id="add-nodes-chevron" style="font-size: 8px;">▼</span>
+            </button>
+
+            <!-- Floating Popover (Detached Dropdown) -->
+            <div id="add-nodes-popover" class="add-nodes-popover" style="display: none;">
+              <div class="btn-grid-nodes">
+                <button class="neo-btn tone-1 btn-add-batch" data-count="1">+1 Node</button>
+                <button class="neo-btn tone-2 btn-add-batch" data-count="5">+5 Nodes</button>
+                <button class="neo-btn tone-3 btn-add-batch" data-count="10">+10 Nodes</button>
+                <button class="neo-btn tone-4 btn-add-batch" data-count="20">+20 Nodes</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-body" style="overflow: visible;">
+
+          <!-- Inspector Content (Always reflects current connected Vantage node) -->
+          <div id="inspector-content" style="display: flex; flex-direction: column; gap: 8px;">
+            <div class="inspector-details">
+              <div class="detail-row">
+                <span class="detail-label">Node ID:</span>
+                <span class="detail-val" id="insp-id">-</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Role:</span>
+                <span class="detail-val" id="insp-role">-</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Raft Port:</span>
+                <span class="detail-val" id="insp-raft">-</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">HTTP Port:</span>
+                <span class="detail-val" id="insp-http">-</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Commit Index:</span>
+                <span class="detail-val" id="insp-commit">-</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Last Log Index:</span>
+                <span class="detail-val" id="insp-lastlog-index">-</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Last Log Term:</span>
+                <span class="detail-val" id="insp-lastlog-term">-</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Applied Index:</span>
+                <span class="detail-val" id="insp-applied">-</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Last Snapshot:</span>
+                <span class="detail-val" id="insp-snapshot">-</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Last Leader Contact:</span>
+                <span class="detail-val" id="insp-last-contact">-</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Voted For (Term <span id="insp-votedfor-term">0</span>):</span>
+                <span class="detail-val" id="insp-votedfor">-</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Health:</span>
+                <span class="detail-val" id="insp-health">-</span>
+              </div>
+
+              <!-- Full hashicorp/raft Stats() dump (dim, collapsed by default) -->
+              <div class="insp-stats-block">
+                <button id="btn-insp-stats" type="button" class="insp-stats-toggle" title="Toggle full hashicorp/raft Stats() dump">
+                  <span>Raft Engine Stats</span>
+                  <span id="insp-stats-chevron">▼</span>
+                </button>
+                <div id="insp-stats-full" class="inspector-stats-full" style="display: none;">
+                  <!-- Populated by InspectorView from raft_stats -->
+                </div>
+              </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <button id="btn-insp-make-leader" class="neo-btn pink" style="width: 100%;">
+                <span>Make Leader</span>
+              </button>
+              <button id="btn-insp-remove" class="neo-btn danger" style="width: 100%;">
+                <span>Remove Node</span>
+              </button>
+              <button id="btn-insp-stop" class="neo-btn orange" style="width: 100%;">
+                <span>Stop Node (Offline)</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- KV Store & Log Replication Card (Bottom Left) -->
+      <section class="neo-card flex-fill-card">
+        <div class="card-header green">
+          <span>KV Replication</span>
+        </div>
+        <div class="card-body">
+          <p class="section-desc">
+            Submit write proposal to currently observed node:
+          </p>
+
+          <form id="form-kv-set" class="form-group">
+            <div class="input-row">
+              <input id="kv-key" type="text" class="neo-input" placeholder="Key" required />
+              <input id="kv-val" type="text" class="neo-input" placeholder="Value" required />
+            </div>
+            <div style="display: grid; grid-template-columns: 1.3fr 1fr; gap: 6px; margin-top: 4px;">
+              <button type="submit" id="btn-kv-set" class="neo-btn cyan" style="width: 100%;">
+                <span>Replicate</span>
+              </button>
+              <button type="button" id="btn-kv-random" class="neo-btn yellow" style="width: 100%;" title="Fill random key-value pair">
+                <span>Random</span>
+              </button>
+            </div>
+          </form>
+
+          <div style="display: flex; flex-direction: column; flex: 1; min-height: 0; margin-top: 6px;">
+            <div class="form-label" style="margin-bottom: 4px;">Local State Machine:</div>
+            <div class="table-scroll-wrapper">
+              <table class="kv-table">
+                <thead>
+                  <tr>
+                    <th style="width: 42%;">Key</th>
+                    <th style="width: 58%;">Value</th>
+                  </tr>
+                </thead>
+                <tbody id="kv-table-body">
+                  <tr>
+                    <td colspan="2" style="text-align: center; color: #6B7280;">No data yet</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </aside>
+
+    <!-- Center Column: Canvas Hero -->
+    <section class="neo-card canvas-card" id="center-canvas-card">
+      <div class="card-header coral">
+        <span>Topology</span>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          
+          <!-- Custom Neobrutalist Layout Dropdown -->
+          <div class="neo-dropdown" id="dropdown-layout" style="width: 175px;">
+            <button type="button" class="neo-dropdown-trigger" id="dropdown-layout-trigger">
+              <span class="dropdown-selected-text" id="layout-selected-text">Concentric (Orbits)</span>
+              <span class="dropdown-arrow">▼</span>
+            </button>
+            <div class="neo-dropdown-menu" id="dropdown-layout-menu">
+              <div class="neo-dropdown-item active" data-value="concentric">Concentric (Orbits)</div>
+              <div class="neo-dropdown-item" data-value="pyramid">Pyramid (Hierarchy)</div>
+              <div class="neo-dropdown-item" data-value="grid">Matrix (Grid)</div>
+              <div class="neo-dropdown-item" data-value="wheel">Circular (Wheel)</div>
+              <div class="neo-dropdown-item" data-value="force">Organic (Free)</div>
+            </div>
+          </div>
+
+          <button id="btn-reset-layout" type="button" class="header-btn-reset" title="Reset node positions and camera zoom">
+            Reset
+          </button>
+        </div>
+      </div>
+      <div class="canvas-wrapper" id="canvas-container">
+        <canvas id="raft-canvas"></canvas>
+
+        <!-- Overlay Legend (Bottom-Left) -->
+        <div class="canvas-overlay-legend">
+          <div class="legend-item">
+            <span class="legend-dot leader"></span>
+            <span>Leader</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot follower"></span>
+            <span>Follower</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot candidate"></span>
+            <span>Candidate</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot offline"></span>
+            <span>Offline</span>
+          </div>
+        </div>
+
+        <!-- Overlay Zoom Controls (Bottom-Right) -->
+        <div class="canvas-overlay-zoom">
+          <button id="btn-zoom-in" class="neo-btn white zoom-btn" title="Zoom In">+</button>
+          <div class="zoom-slider" id="zoom-slider" title="Drag to zoom">
+            <div class="zoom-slider-track">
+              <div class="zoom-slider-fill"></div>
+              <div class="zoom-slider-thumb"></div>
+            </div>
+          </div>
+          <button id="btn-zoom-out" class="neo-btn white zoom-btn" title="Zoom Out">-</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Area: Dynamic Multi-Stream Columns -->
+    <aside class="streams-container" id="streams-container">
+      
+      <!-- Primary Event Stream Column -->
+      <div class="stream-column" id="primary-stream-column">
+        <section class="neo-card flex-fill-card">
+          <div class="card-header cyan stream-card-header">
+            <span class="stream-title">Primary Stream</span>
+            <div class="stream-card-controls">
+              <label class="hb-toggle-wrapper" title="Show / Hide Heartbeat events panel">
+                <input type="checkbox" id="toggle-heartbeat" class="hb-checkbox">
+                <span class="hb-toggle-pill">
+                  <span class="hb-toggle-thumb"></span>
+                  <span class="hb-toggle-label">HB</span>
+                </span>
+              </label>
+              
+              <!-- Add Extra Stream Dropdown Trigger -->
+              <div class="neo-dropdown" id="dropdown-add-stream">
+                <button type="button" class="neo-btn tone-1" id="btn-add-stream" title="Pin another node stream column side-by-side">
+                  <span>+ Stream</span>
+                  <span style="font-size: 8px;">▼</span>
+                </button>
+                <div class="neo-dropdown-menu" id="dropdown-add-stream-menu">
+                  <!-- Populated dynamically with available peers -->
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card-body event-stream-card-body">
+            <!-- Top: Main Raft Lifecycle & Consensus Events (20 Max) -->
+            <div class="event-log-container" id="event-log-list"></div>
+
+            <!-- Bottom: Dedicated Heartbeat Pulses Sub-Panel -->
+            <div class="heartbeat-panel" id="heartbeat-panel" style="display: none;">
+              <div class="heartbeat-panel-header">
+                <span class="hb-indicator-dot"></span>
+                <span>Heartbeat Pulse Stream (AppendEntries)</span>
+              </div>
+              <div class="event-log-container hb-log-feed" id="heartbeat-log-list"></div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Dynamic Extra Stream Columns Mount Point -->
+      <div id="extra-streams-container" class="extra-streams-wrapper"></div>
+
+    </aside>
+
+  </main>
+
+  <!-- Critical Delete Confirmation Modal (Theme Consistent) -->
+  <div id="modal-critical-delete" class="neo-modal-backdrop" style="display: none;">
+    <div class="neo-modal-box">
+      <div class="modal-header danger">
+        <span>CRITICAL ACTION WARNING</span>
+      </div>
+      <div class="modal-body">
+        <p class="modal-text">
+          You are deleting/stopping <strong><span id="modal-target-node-id">node-1</span></strong>, which is the <strong>currently active node</strong> providing this UI session.
+        </p>
+        <p class="modal-subtext">
+          Continuing will terminate this node's HTTP server and disconnect this dashboard. The remaining cluster peers will automatically elect a new leader.
+        </p>
+        <div class="modal-actions">
+          <button id="btn-modal-cancel" class="neo-btn white" style="flex: 1;">Cancel</button>
+          <button id="btn-modal-confirm" class="neo-btn danger" style="flex: 1.2;">Terminate Node</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Full-Screen Node Terminated Failover Screen -->
+  <div id="overlay-node-terminated" class="terminated-screen" style="display: none;">
+    <div class="terminated-card">
+      <div class="terminated-header">
+        <span>Node Disconnected</span>
+      </div>
+      <div class="terminated-body">
+        <p class="terminated-msg">
+          <strong id="term-node-name">node-1</strong> was terminated. Select an active peer to connect:
+        </p>
+        <div class="terminated-links-wrapper">
+          <div class="peer-links-grid" id="term-peer-links">
+            <!-- Dynamic live peer buttons -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
