@@ -29,11 +29,7 @@
 make start
 ```
 
-Builds the binary, bootstraps a 3-node cluster and wipes old data. Open any node:
-
-- Node 1: http://localhost:8001
-- Node 2: http://localhost:8002
-- Node 3: http://localhost:8003
+Builds the binary, bootstraps a 3-node cluster and wipes old data. Open the UI from any node.
 
 ```bash
 make stop    # stop the cluster
