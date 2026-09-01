@@ -8,9 +8,6 @@
 
 [![Go](https://img.shields.io/badge/Go-00ADD8?logo=go&logoColor=white)](https://go.dev)
 [![HashiCorp Raft](https://img.shields.io/badge/HashiCorp%20Raft-CA2159?logo=hashicorp&logoColor=white)](https://github.com/hashicorp/raft)
-[![BoltDB](https://img.shields.io/badge/BoltDB-4DB606?logo=lightning&logoColor=white)](https://github.com/boltdb/bolt)
-[![SSE](https://img.shields.io/badge/SSE-Realtime-111827)](#)
-[![Canvas](https://img.shields.io/badge/Canvas-60%20FPS-F7B32B)](#)
 
 </div>
 
