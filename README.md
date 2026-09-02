@@ -39,11 +39,11 @@ make clean   # stop + remove bin/ data/ logs/
 
 ## Screenshots
 
-<div style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
-  <img src="readme/ss1.webp" width="320">
-  <img src="readme/ss2.webp" width="320">
-  <img src="readme/ss3.webp" width="320">
-</div>
+<p align="center">
+  <img src="readme/ss1.webp" width="32%" alt="ss1" />
+  <img src="readme/ss2.webp" width="32%" alt="ss2" />
+  <img src="readme/ss3.webp" width="32%" alt="ss3" />
+</p>
 
 ## API
 
